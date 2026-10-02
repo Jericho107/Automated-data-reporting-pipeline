@@ -18,3 +18,11 @@ def test_duplicate_id_fails() -> None:
     text = "record_id,period,entity,amount\nR1,2026-09,A,10\nR1,2026-09,B,20\n"
     with pytest.raises(ValueError, match="duplicate record_id"):
         parse_csv(text)
+
+
+def test_non_financial_field_changes_checksum() -> None:
+    rows = parse_csv(sample_csv())
+    altered = [dict(row) for row in rows]
+    altered[0]["entity"] = "CORRUPTED"
+    assert reconcile(altered).total_amount == reconcile(rows).total_amount
+    assert reconcile(altered).checksum != reconcile(rows).checksum
