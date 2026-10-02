@@ -4,8 +4,8 @@ import csv
 import hashlib
 import io
 import sqlite3
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
-from typing import Iterable
 
 REQUIRED_COLUMNS = ("record_id", "period", "entity", "amount")
 
@@ -20,7 +20,9 @@ class ReconciliationResult:
 def parse_csv(text: str) -> list[dict[str, str]]:
     reader = csv.DictReader(io.StringIO(text))
     if tuple(reader.fieldnames or ()) != REQUIRED_COLUMNS:
-        raise ValueError(f"schema drift: expected {REQUIRED_COLUMNS}, got {reader.fieldnames}")
+        raise ValueError(
+            f"schema drift: expected {REQUIRED_COLUMNS}, got {reader.fieldnames}"
+        )
     rows = list(reader)
     validate_rows(rows)
     return rows
@@ -57,7 +59,10 @@ def reconcile(rows: list[dict[str, str]]) -> ReconciliationResult:
     )
 
 
-def load_sqlite(rows: list[dict[str, str]], path: str = ":memory:") -> ReconciliationResult:
+def load_sqlite(
+    rows: list[dict[str, str]],
+    path: str = ":memory:",
+) -> ReconciliationResult:
     conn = sqlite3.connect(path)
     try:
         conn.execute("DROP TABLE IF EXISTS raw_reporting")
@@ -68,13 +73,24 @@ def load_sqlite(rows: list[dict[str, str]], path: str = ":memory:") -> Reconcili
         )
         conn.executemany(
             "INSERT INTO raw_reporting VALUES(?,?,?,?)",
-            [(r["record_id"], r["period"], r["entity"], float(r["amount"])) for r in rows],
+            [
+                (
+                    row["record_id"],
+                    row["period"],
+                    row["entity"],
+                    float(row["amount"]),
+                )
+                for row in rows
+            ],
         )
         target_rows, target_total = conn.execute(
             "SELECT COUNT(*), ROUND(SUM(amount),2) FROM raw_reporting"
         ).fetchone()
         source = reconcile(rows)
-        if target_rows != source.rows or round(target_total or 0, 2) != source.total_amount:
+        if (
+            target_rows != source.rows
+            or round(target_total or 0, 2) != source.total_amount
+        ):
             raise ValueError("source-to-target reconciliation failed")
         return source
     finally:
@@ -94,4 +110,8 @@ def serialise_sample() -> dict[str, object]:
     rows = parse_csv(sample_csv())
     source = reconcile(rows)
     target = load_sqlite(rows)
-    return {"source": asdict(source), "target": asdict(target), "reconciled": source == target}
+    return {
+        "source": asdict(source),
+        "target": asdict(target),
+        "reconciled": source == target,
+    }
