@@ -83,16 +83,26 @@ def load_sqlite(
                 for row in rows
             ],
         )
-        target_rows, target_total = conn.execute(
-            "SELECT COUNT(*), ROUND(SUM(amount),2) FROM raw_reporting"
-        ).fetchone()
+        target = [
+            {
+                "record_id": str(record_id),
+                "period": str(period),
+                "entity": str(entity),
+                "amount": f"{float(amount):.2f}",
+            }
+            for record_id, period, entity, amount in conn.execute(
+                "SELECT record_id, period, entity, amount FROM raw_reporting ORDER BY record_id"
+            ).fetchall()
+        ]
         source = reconcile(rows)
+        target_result = reconcile(target)
         if (
-            target_rows != source.rows
-            or round(target_total or 0, 2) != source.total_amount
+            target_result.rows != source.rows
+            or target_result.total_amount != source.total_amount
+            or target_result.checksum != source.checksum
         ):
             raise ValueError("source-to-target reconciliation failed")
-        return source
+        return target_result
     finally:
         conn.close()
 
