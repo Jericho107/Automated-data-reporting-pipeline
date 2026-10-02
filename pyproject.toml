@@ -16,7 +16,7 @@ dev = ["pytest>=8,<9", "ruff>=0.9,<1"]
 where = ["src"]
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py312"
 
 [tool.ruff.lint]
