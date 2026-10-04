@@ -132,6 +132,7 @@ def run_pipeline(
         if source != staged:
             connection.rollback()
             raise ValueError("source-to-staging reconciliation failed")
+        connection.commit()
 
         connection.execute("BEGIN IMMEDIATE")
         connection.execute("DELETE FROM raw_reporting")
