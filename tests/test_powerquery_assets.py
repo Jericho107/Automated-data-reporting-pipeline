@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -20,4 +19,4 @@ def test_power_query_asset_has_explicit_file_parameter_and_contract():
 def test_power_query_documentation_keeps_runtime_claim_boundary():
     text = (ROOT / "powerquery" / "README.md").read_text(encoding="utf-8").lower()
 
-    assert "does **not** claim runtime parity" in text
+    assert "does **not** claim power query desktop runtime validation" in text
