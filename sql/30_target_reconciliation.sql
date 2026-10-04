@@ -1,7 +1,20 @@
-WITH target AS (
+WITH latest_run AS (
+    SELECT
+        run_id,
+        source_rows,
+        source_total,
+        source_checksum,
+        status,
+        execution_count,
+        last_executed_at
+    FROM pipeline_runs
+    ORDER BY last_executed_at DESC, rowid DESC
+    LIMIT 1
+),
+target AS (
     SELECT
         COUNT(*) AS target_rows,
-        ROUND(SUM(amount), 2) AS target_total
+        ROUND(COALESCE(SUM(amount), 0), 2) AS target_total
     FROM raw_reporting
 )
 SELECT
@@ -15,9 +28,9 @@ SELECT
     CASE
         WHEN r.source_rows = t.target_rows
          AND ROUND(r.source_total - t.target_total, 2) = 0
+         AND r.status = 'PASS'
         THEN 'PASS'
         ELSE 'FAIL'
     END AS reconciliation_status
-FROM pipeline_runs r
-CROSS JOIN target t
-ORDER BY r.run_id;
+FROM latest_run r
+CROSS JOIN target t;
