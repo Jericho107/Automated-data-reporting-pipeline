@@ -2,7 +2,9 @@
 
 # Automated Data Reporting Pipeline
 
-### Contract-driven ingestion, reconciliation, mart generation and delivery evidence for recurring reporting.
+### Multi-source ingestion · Contracts · Idempotency · Reconciliation · Delivery
+
+**Python · SQLite · CSV · JSON/API Pattern · CI**
 
 **Pretoria BI — Data · Intelligence · Performance**
 
@@ -12,23 +14,57 @@
 
 ## Management question
 
-> **Can a recurring report be trusted when source files change or the target load silently diverges?**
+> **Can a recurring management report be reproduced, reconciled and delivered reliably when its source systems change or a previous load is rerun?**
 
-**All data and entities are synthetic. No client result or realised ROI is claimed.**
+The project implements a compact reporting control plane rather than a one-off script.
 
-## What this repository proves
-
-- Exact schema contract
-- Business-key uniqueness
-- Source checksum
-- Source/target row and financial reconciliation
-- Idempotent SQLite landing pattern
-
-## Evidence chain
+## Pipeline
 
 ```text
-SOURCE → CONTRACT → VALIDATION → RECONCILIATION → REPORTING STATE → DELIVERY EVIDENCE
+CSV SOURCE ───────┐
+JSON / API ───────┼→ SCHEMA CONTRACT → CROSS-SOURCE KEY CONTROL
+                  ↓
+          CANONICAL SOURCE STATE
+                  ↓
+        IDEMPOTENT SQLITE LANDING
+                  ↓
+      FULL-ROW RECONCILIATION
+                  ↓
+             RUN MANIFEST
+                  ↓
+      MANAGEMENT DELIVERY HTML
 ```
+
+Implemented controls include:
+
+- exact source schema;
+- business-key uniqueness inside and across sources;
+- canonical SHA-256 checksum;
+- row and financial reconciliation;
+- non-financial drift detection;
+- idempotent upsert behavior;
+- deterministic run identifier;
+- one manifest row per identical source state;
+- generated management delivery artefact.
+
+## Delivery
+
+```bash
+python -m reporting_pipeline.cli deliver
+```
+
+Produces:
+
+- `output/reporting.sqlite`
+- `output/management_report.html`
+
+## Reverse test
+
+The validation path deliberately creates a target mutation, reruns the same source state and proves that:
+
+1. the target is restored to the source state;
+2. reconciliation returns to PASS;
+3. the same source state does not create duplicate run-manifest records.
 
 ## Run locally
 
@@ -37,11 +73,12 @@ python -m pip install -e ".[dev]"
 ruff check .
 pytest -q
 python -m reporting_pipeline.cli smoke
+python -m reporting_pipeline.cli deliver
 python -m reporting_pipeline.cli reverse-test
 ```
 
-## Proof boundary
+All data are synthetic. The implementation demonstrates reporting reliability patterns rather than production scheduling, enterprise authentication or a specific client integration.
 
-The repository demonstrates a synthetic technical pattern. It does not claim production scale or realised client impact.
+---
 
 **Pretoria BI — Understand · Decide · Act · Measure**

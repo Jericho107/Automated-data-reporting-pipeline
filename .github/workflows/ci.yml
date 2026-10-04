@@ -32,5 +32,9 @@ jobs:
         run: pytest -q
       - name: Smoke evidence
         run: python -m reporting_pipeline.cli smoke
+      - name: Generate delivery artefact
+        run: |
+          python -m reporting_pipeline.cli deliver
+          test -s output/management_report.html
       - name: Reverse-test evidence
         run: python -m reporting_pipeline.cli reverse-test
