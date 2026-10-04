@@ -3,6 +3,8 @@ SELECT
     source_rows,
     source_total,
     source_checksum,
-    status
+    status,
+    execution_count,
+    last_executed_at
 FROM pipeline_runs
-ORDER BY run_id;
+ORDER BY last_executed_at DESC, run_id;
