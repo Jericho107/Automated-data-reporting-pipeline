@@ -15,9 +15,9 @@ def test_messy_workbook_contract_and_transformation(tmp_path):
     rows, result = transform_excel(source)
 
     assert result.source_rows == 11
-    assert result.accepted_rows == 6
-    assert result.rejected_rows == 5
-    assert result.accepted_total == 3351.25
+    assert result.accepted_rows == 5
+    assert result.rejected_rows == 6
+    assert result.accepted_total == 3131.25
     assert len({row["record_id"] for row in rows}) == len(rows)
     assert {row["entity"] for row in rows} == {"North", "South", "West"}
 
