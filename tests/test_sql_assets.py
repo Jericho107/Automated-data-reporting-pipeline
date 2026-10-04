@@ -36,3 +36,22 @@ def test_run_control_and_reconciliation_sql_execute(tmp_path):
     assert len(runs) == 1
     assert len(recon) == 1
     assert recon[0][-1] == "PASS"
+
+
+def test_reconciliation_sql_tracks_latest_snapshot_after_source_change(tmp_path):
+    path = tmp_path / "reporting.sqlite"
+    run_pipeline(sample_csv(), sample_json(), path)
+    reduced_json = (
+        '[{"record_id":"R004","period":"2026-09","entity":"C","amount":"500.00"}]'
+    )
+    run_pipeline(sample_csv(), reduced_json, path)
+
+    import sqlite3
+
+    with sqlite3.connect(path) as connection:
+        recon = connection.execute(_sql("30_target_reconciliation.sql")).fetchone()
+
+    assert recon is not None
+    assert recon[1] == 4
+    assert recon[2] == 4
+    assert recon[-1] == "PASS"
