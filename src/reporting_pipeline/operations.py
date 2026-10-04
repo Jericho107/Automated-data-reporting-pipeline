@@ -7,8 +7,9 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from .delivery import write_delivery
-from .excel import create_management_workbook, create_messy_source_workbook
+from .delivery import write_rendered_delivery
+from .excel import create_management_workbook, create_messy_source_workbook, transform_excel
+from .pipeline import publish_snapshot
 
 
 def _sha256(path: Path) -> str:
@@ -36,8 +37,23 @@ def build_operational_evidence(output_dir: str | Path) -> Path:
     manifest_path.unlink(missing_ok=True)
 
     create_messy_source_workbook(source_excel)
-    _, excel_result = create_management_workbook(source_excel, management_excel)
-    write_delivery(database, html)
+    clean_rows, excel_result = transform_excel(source_excel)
+    create_management_workbook(source_excel, management_excel)
+    pipeline_rows = [
+        {
+            "record_id": str(row["record_id"]),
+            "period": str(row["period"]),
+            "entity": str(row["entity"]),
+            "amount": f"{float(row['amount']):.2f}",
+        }
+        for row in clean_rows
+    ]
+    pipeline_result = publish_snapshot(
+        pipeline_rows,
+        database,
+        {"excel_rows": len(pipeline_rows)},
+    )
+    write_rendered_delivery(pipeline_result, html)
 
     sql_root = Path(__file__).resolve().parents[2] / "sql"
     reconciliation_sql = (sql_root / "30_target_reconciliation.sql").read_text(
@@ -77,6 +93,7 @@ def build_operational_evidence(output_dir: str | Path) -> Path:
     manifest: dict[str, Any] = {
         "pipeline": {
             "run_id": run[0],
+            "sources": pipeline_result["sources"],
             "source_rows": run[1],
             "source_total": run[2],
             "source_checksum": run[3],
