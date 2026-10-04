@@ -1,0 +1,58 @@
+name: scheduled-reporting-evidence
+
+on:
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scheduled-reporting-evidence
+  cancel-in-progress: false
+
+jobs:
+  recurring-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Quality gate
+        run: |
+          ruff check .
+          pytest -q
+      - name: Build recurring reporting evidence
+        run: python -m reporting_pipeline.cli operate
+      - name: Reverse tests
+        run: python -m reporting_pipeline.cli reverse-test
+      - name: Assert control manifest
+        run: |
+          test -s output/operational/run_manifest.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(
+              Path("output/operational/run_manifest.json").read_text(encoding="utf-8")
+          )
+          assert manifest["pipeline"]["status"] == "PASS"
+          assert manifest["pipeline"]["sql_reconciliation_status"] == "PASS"
+          assert manifest["pipeline"]["source_rows"] == manifest["pipeline"]["target_rows"]
+          assert manifest["pipeline"]["source_total"] == manifest["pipeline"]["target_total"]
+          PY
+      - name: Publish recurring evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: scheduled-reporting-evidence-${{ github.run_number }}
+          path: output/operational/
+          if-no-files-found: error
+          retention-days: 30
