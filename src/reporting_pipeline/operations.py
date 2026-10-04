@@ -55,7 +55,13 @@ def build_operational_evidence(output_dir: str | Path) -> Path:
     )
     write_rendered_delivery(pipeline_result, html)
 
-    sql_root = Path(__file__).resolve().parents[2] / "sql"
+    sql_candidates = [
+        Path.cwd() / "sql",
+        Path(__file__).resolve().parents[2] / "sql",
+    ]
+    sql_root = next((path for path in sql_candidates if path.is_dir()), None)
+    if sql_root is None:
+        raise RuntimeError("SQL asset directory is unavailable")
     reconciliation_sql = (sql_root / "30_target_reconciliation.sql").read_text(
         encoding="utf-8"
     )
