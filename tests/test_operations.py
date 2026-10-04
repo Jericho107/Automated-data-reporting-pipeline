@@ -9,11 +9,13 @@ def test_operational_bundle_is_complete_and_reconciled(tmp_path):
 
     assert manifest["pipeline"]["status"] == "PASS"
     assert manifest["pipeline"]["sql_reconciliation_status"] == "PASS"
+    assert manifest["pipeline"]["sources"] == {"excel_rows": 5}
     assert manifest["pipeline"]["source_rows"] == manifest["pipeline"]["target_rows"]
     assert manifest["pipeline"]["source_total"] == manifest["pipeline"]["target_total"]
     assert manifest["excel"]["source_rows"] == 11
     assert manifest["excel"]["accepted_rows"] == 5
     assert manifest["excel"]["rejected_rows"] == 6
+    assert manifest["excel"]["accepted_total"] == manifest["pipeline"]["source_total"]
     assert manifest["evidence_boundary"]["power_query_desktop_runtime_validated"] is False
 
     expected = {
