@@ -4,7 +4,7 @@
 
 ### Excel · Power Query · Multi-source ingestion · SQL · Reconciliation · Management delivery
 
-**Python 3.12 · openpyxl · Power Query M · SQLite · CSV · JSON/API pattern · GitHub Actions**
+**Python 3.12 · openpyxl · Power Query M · SQL/SQLite · Docker · GitHub Actions**
 
 **Pretoria BI — Data · Intelligence · Performance**
 
@@ -31,7 +31,10 @@ This repository is a controlled reporting system, not a formatting exercise. It 
 | Reconciliation | row, amount and canonical full-row checksum controls |
 | Idempotency | same source state restores target state without duplicate run manifests |
 | Delivery | HTML report + controlled Excel management pack |
-| CI | compile, Ruff, tests, smoke, delivery, Excel generation and reverse tests |
+| Operations | auditable run manifest with artefact SHA-256 fingerprints |
+| Scheduling | recurring GitHub Actions execution + manual dispatch |
+| Portability | Docker image built and executed in CI |
+| CI | compile, Ruff, tests, smoke, delivery, Excel generation, container run and reverse tests |
 
 ## Excel case study
 
@@ -101,6 +104,41 @@ JSON / API-SHAPED SOURCE ─┘              │
                                MANAGEMENT DELIVERY
 ```
 
+## Operational run
+
+```bash
+python -m reporting_pipeline.cli operate
+```
+
+This produces one inspectable evidence bundle under `output/operational/` containing the
+SQLite target, HTML management report, messy source workbook, controlled Excel report and
+`run_manifest.json`. The manifest records the run identity, source/target control totals,
+SQL reconciliation result, Excel DQ outcome and SHA-256 fingerprint of every delivered
+artefact.
+
+The target is published as a transactional **current snapshot**. A smaller subsequent source
+must remove stale target records; an invalid next source must leave the last valid snapshot
+unchanged. Both behaviors are reverse-tested.
+
+## Recurring execution
+
+`.github/workflows/scheduled-reporting.yml` runs the quality gate and operational reporting
+chain every Monday and also supports manual dispatch. The resulting evidence bundle is stored
+as a GitHub Actions artefact with a defined retention period.
+
+This proves recurring automation in GitHub Actions. It is not presented as enterprise
+orchestration or SLA monitoring.
+
+## Container runtime
+
+```bash
+docker build -t automated-reporting-pipeline .
+docker run --rm automated-reporting-pipeline
+```
+
+The main CI workflow builds the image, executes the reporting pipeline inside the container
+and asserts that the operational manifest was produced.
+
 ## Reverse testing
 
 The repository deliberately attacks its own assumptions.
@@ -129,6 +167,7 @@ pytest -q
 python -m reporting_pipeline.cli smoke
 python -m reporting_pipeline.cli deliver
 python -m reporting_pipeline.cli excel-demo
+python -m reporting_pipeline.cli operate
 python -m reporting_pipeline.cli reverse-test
 ```
 
@@ -139,7 +178,7 @@ GitHub Actions publishes the generated reporting evidence bundle as a workflow a
 All data are synthetic. This project demonstrates controlled reporting architecture and spreadsheet automation patterns. It does **not** claim:
 
 - a live client integration;
-- production scheduling/orchestration;
+- enterprise orchestration, retry queues or SLA monitoring;
 - enterprise authentication or secret management;
 - Microsoft Excel/Power Query Desktop runtime validation;
 - measured client ROI;
