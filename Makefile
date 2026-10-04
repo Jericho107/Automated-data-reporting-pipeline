@@ -13,7 +13,17 @@ smoke:
 deliver:
 	python -m reporting_pipeline.cli deliver
 
+excel:
+	python -m reporting_pipeline.cli excel-demo
+
+operate:
+	python -m reporting_pipeline.cli operate
+
 reverse-test:
 	python -m reporting_pipeline.cli reverse-test
 
-validate: lint test smoke reverse-test
+container:
+	docker build -t automated-reporting-pipeline .
+	docker run --rm automated-reporting-pipeline
+
+validate: lint test smoke excel operate reverse-test
