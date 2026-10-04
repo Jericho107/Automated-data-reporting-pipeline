@@ -254,7 +254,7 @@ def create_management_workbook(
     params = wb.create_sheet("Parameters")
     params.append(("Parameter", "Value"))
     params.append(("SourceWorkbook", Path(source_path).name))
-    params.append(("Transformation", "Python reference implementation + Power Query M parity asset"))
+    params.append(("Transformation", "Python reference implementation + reviewable Power Query M asset"))
     params.append(("ControlMode", "FAIL_CLOSED"))
     params.append(("SyntheticData", "TRUE"))
 
