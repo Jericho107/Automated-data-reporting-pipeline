@@ -161,11 +161,11 @@ def run_pipeline(
                 execution_count,
                 last_executed_at
             )
-            VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+            VALUES (?, ?, ?, ?, ?, 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
             ON CONFLICT(run_id) DO UPDATE SET
                 status=excluded.status,
                 execution_count=pipeline_runs.execution_count + 1,
-                last_executed_at=CURRENT_TIMESTAMP
+                last_executed_at=strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
             """,
             (run_id, source.rows, source.total_amount, source.checksum, status),
         )
