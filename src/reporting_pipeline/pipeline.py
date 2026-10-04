@@ -112,14 +112,12 @@ def _read_reconciliation_rows(
     ]
 
 
-def run_pipeline(
-    csv_text: str,
-    json_text: str,
+def publish_snapshot(
+    rows: list[dict[str, str]],
     database_path: str | Path,
+    sources: dict[str, int],
 ) -> dict[str, object]:
-    csv_rows = parse_csv(csv_text)
-    json_rows = parse_json_records(json_text)
-    rows = merge_sources(csv_rows, json_rows)
+    validate_rows(rows)
     source = reconcile(rows)
     run_id = _run_id(rows)
 
@@ -184,7 +182,7 @@ def run_pipeline(
         }
         return {
             "run_id": run_id,
-            "sources": {"csv_rows": len(csv_rows), "json_rows": len(json_rows)},
+            "sources": sources,
             "reconciliation": asdict(source),
             "status": status,
             "entity_totals": by_entity,
@@ -195,6 +193,20 @@ def run_pipeline(
     finally:
         connection.close()
 
+
+def run_pipeline(
+    csv_text: str,
+    json_text: str,
+    database_path: str | Path,
+) -> dict[str, object]:
+    csv_rows = parse_csv(csv_text)
+    json_rows = parse_json_records(json_text)
+    rows = merge_sources(csv_rows, json_rows)
+    return publish_snapshot(
+        rows,
+        database_path,
+        {"csv_rows": len(csv_rows), "json_rows": len(json_rows)},
+    )
 
 def sample_json() -> str:
     return json.dumps(
