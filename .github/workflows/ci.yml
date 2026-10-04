@@ -36,5 +36,21 @@ jobs:
         run: |
           python -m reporting_pipeline.cli deliver
           test -s output/management_report.html
+      - name: Generate Excel evidence
+        run: |
+          python -m reporting_pipeline.cli excel-demo
+          test -s output/source_messy_reporting.xlsx
+          test -s output/clean_management_report.xlsx
+          test -s output/excel_evidence.json
       - name: Reverse-test evidence
         run: python -m reporting_pipeline.cli reverse-test
+      - name: Publish evidence bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporting-evidence
+          path: |
+            output/management_report.html
+            output/source_messy_reporting.xlsx
+            output/clean_management_report.xlsx
+            output/excel_evidence.json
+          if-no-files-found: error
