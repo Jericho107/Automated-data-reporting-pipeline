@@ -8,6 +8,7 @@ from pathlib import Path
 from .core import parse_csv, sample_csv, serialise_sample
 from .delivery import write_delivery
 from .excel import create_management_workbook, create_messy_source_workbook, excel_evidence
+from .operations import build_operational_evidence
 from .pipeline import run_pipeline, sample_json
 
 
@@ -31,6 +32,12 @@ def excel_demo() -> int:
     evidence_path = Path("output/excel_evidence.json")
     evidence_path.write_text(json.dumps(evidence, indent=2, sort_keys=True), encoding="utf-8")
     print(json.dumps(evidence, indent=2, sort_keys=True))
+    return 0
+
+
+def operate() -> int:
+    manifest = build_operational_evidence("output/operational")
+    print(manifest.as_posix())
     return 0
 
 
@@ -92,10 +99,12 @@ def main() -> int:
         return deliver()
     if command == "excel-demo":
         return excel_demo()
+    if command == "operate":
+        return operate()
     if command == "reverse-test":
         return reverse_test()
     print(
-        "usage: python -m reporting_pipeline.cli [smoke|deliver|excel-demo|reverse-test]",
+        "usage: python -m reporting_pipeline.cli [smoke|deliver|excel-demo|operate|reverse-test]",
         file=sys.stderr,
     )
     return 2
