@@ -207,20 +207,19 @@ def create_management_workbook(
         totals[row["entity"]] = round(totals.get(row["entity"], 0.0) + row["amount"], 2)
     summary["D3"] = "Entity"
     summary["E3"] = "Amount"
-    for entity, amount in sorted(totals.items()):
-        summary.append(["", "", "", entity, amount])
-    for cell in summary["E"][3:]:
-        cell.number_format = '#,##0.00 "EUR"'
+    for row_number, (entity, amount) in enumerate(sorted(totals.items()), start=4):
+        summary.cell(row_number, 4, entity)
+        summary.cell(row_number, 5, amount)
+        summary.cell(row_number, 5).number_format = '#,##0.00 "EUR"'
 
     chart = BarChart()
     chart.title = "Accepted amount by entity"
     chart.y_axis.title = "EUR"
     chart.x_axis.title = "Entity"
     if totals:
-        start = 4
         end = 3 + len(totals)
         chart.add_data(Reference(summary, min_col=5, min_row=3, max_row=end), titles_from_data=True)
-        chart.set_categories(Reference(summary, min_col=4, min_row=start, max_row=end))
+        chart.set_categories(Reference(summary, min_col=4, min_row=4, max_row=end))
         summary.add_chart(chart, "D10")
 
     clean = wb.create_sheet("Clean_Data")
