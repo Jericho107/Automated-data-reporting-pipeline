@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .core import parse_csv, sample_csv, serialise_sample
 from .delivery import write_delivery
+from .excel import create_management_workbook, create_messy_source_workbook, excel_evidence
 from .pipeline import run_pipeline, sample_json
 
 
@@ -20,6 +21,16 @@ def smoke() -> int:
 def deliver() -> int:
     path = write_delivery("output/reporting.sqlite", "output/management_report.html")
     print(path.as_posix())
+    return 0
+
+
+def excel_demo() -> int:
+    source = create_messy_source_workbook("output/source_messy_reporting.xlsx")
+    output, _ = create_management_workbook(source, "output/clean_management_report.xlsx")
+    evidence = excel_evidence(source, output)
+    evidence_path = Path("output/excel_evidence.json")
+    evidence_path.write_text(json.dumps(evidence, indent=2, sort_keys=True), encoding="utf-8")
+    print(json.dumps(evidence, indent=2, sort_keys=True))
     return 0
 
 
@@ -79,9 +90,14 @@ def main() -> int:
         return smoke()
     if command == "deliver":
         return deliver()
+    if command == "excel-demo":
+        return excel_demo()
     if command == "reverse-test":
         return reverse_test()
-    print("usage: python -m reporting_pipeline.cli [smoke|deliver|reverse-test]", file=sys.stderr)
+    print(
+        "usage: python -m reporting_pipeline.cli [smoke|deliver|excel-demo|reverse-test]",
+        file=sys.stderr,
+    )
     return 2
 
 
