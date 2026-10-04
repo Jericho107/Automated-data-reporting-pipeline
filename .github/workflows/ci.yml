@@ -48,6 +48,15 @@ jobs:
           test -s output/operational/run_manifest.json
       - name: Reverse-test evidence
         run: python -m reporting_pipeline.cli reverse-test
+      - name: Build and execute container
+        run: |
+          docker build -t automated-reporting-pipeline .
+          mkdir -p output/container
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            -v "$PWD/output/container:/app/output" \
+            automated-reporting-pipeline
+          test -s output/container/operational/run_manifest.json
       - name: Publish evidence bundle
         uses: actions/upload-artifact@v4
         with:
@@ -58,4 +67,5 @@ jobs:
             output/clean_management_report.xlsx
             output/excel_evidence.json
             output/operational/
+            output/container/operational/
           if-no-files-found: error
