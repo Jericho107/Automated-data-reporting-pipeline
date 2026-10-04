@@ -42,6 +42,10 @@ jobs:
           test -s output/source_messy_reporting.xlsx
           test -s output/clean_management_report.xlsx
           test -s output/excel_evidence.json
+      - name: Build operational evidence
+        run: |
+          python -m reporting_pipeline.cli operate
+          test -s output/operational/run_manifest.json
       - name: Reverse-test evidence
         run: python -m reporting_pipeline.cli reverse-test
       - name: Publish evidence bundle
@@ -53,4 +57,5 @@ jobs:
             output/source_messy_reporting.xlsx
             output/clean_management_report.xlsx
             output/excel_evidence.json
+            output/operational/
           if-no-files-found: error
