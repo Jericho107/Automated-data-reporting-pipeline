@@ -10,5 +10,7 @@ CREATE TABLE IF NOT EXISTS pipeline_runs (
     source_rows INTEGER NOT NULL,
     source_total REAL NOT NULL,
     source_checksum TEXT NOT NULL,
-    status TEXT NOT NULL CHECK(status IN ('PASS', 'FAIL'))
+    status TEXT NOT NULL CHECK(status IN ('PASS', 'FAIL')),
+    execution_count INTEGER NOT NULL DEFAULT 1,
+    last_executed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
