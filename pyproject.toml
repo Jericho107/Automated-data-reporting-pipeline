@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "automated-data-reporting-pipeline"
-version = "1.1.0"
-description = "Contract-driven ingestion, reconciliation, mart generation and delivery evidence for recurring reporting."
+version = "1.2.0"
+description = "Governed recurring reporting with Excel, Power Query evidence, multi-source ingestion, reconciliation and management delivery."
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["openpyxl>=3.1,<4"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<9", "ruff>=0.9,<1"]
