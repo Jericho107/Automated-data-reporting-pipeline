@@ -10,7 +10,10 @@ def test_power_query_asset_has_explicit_file_parameter_and_contract():
     assert "File.Contents(pSourcePath)" in text
     assert "MissingField.Error" in text
     assert 'Item="Raw_Transactions"' in text
-    assert "Table.TransformColumnTypes" in text
+    assert 'Item="Entity_Map"' in text
+    assert "Table.NestedJoin" in text
+    assert "try Number.FromText" in text
+    assert '"Canonical Entity"' in text
     assert "Table.Distinct" in text
 
 
